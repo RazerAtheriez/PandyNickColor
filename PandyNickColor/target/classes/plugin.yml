@@ -1,0 +1,22 @@
+name: PandyNickColor
+version: 1.0
+main: me.pandy.PandyNickColor
+api-version: "1.21"
+depend: [TAB]
+commands:
+  nickcolor:
+    description: Управление цветами ника в TAB
+    usage: /<command> <название/clear> <игрок>
+  tabcolor:
+    description: Смена собственного цвета ника в TAB
+    usage: /<command> <название/clear>
+  pandynickcolor:
+    description: Управление плагином PandyNickColor
+    usage: /<command> reload
+permissions:
+  nickcolor.color:
+    description: Позволяет использовать команду /nickcolor
+    default: op
+  nickcolor.reload:
+    description: Позволяет использовать команду /pandynickcolor reload
+    default: op
