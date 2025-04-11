@@ -16,19 +16,4 @@ PandyNickColor — это плагин для Minecraft-серверов на Pa
 ### Добавление зависимости
 Добавьте PandyNickColor как зависимость в ваш `pom.xml` через JitPack:
 
-```xml
-<repositories>
-    <repository>
-        <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
-    </repository>
-</repositories>
-
-<dependencies>
-    <dependency>
-        <groupId>com.github.RazerAtheriez</groupId>
-        <artifactId>PandyNickColor</artifactId>
-        <version>v1.0</version>
-        <scope>provided</scope>
-    </dependency>
-</dependencies>
+[![](https://jitpack.io/v/RazerAtheriez/PandyNickColor.svg)](https://jitpack.io/#RazerAtheriez/PandyNickColor)
