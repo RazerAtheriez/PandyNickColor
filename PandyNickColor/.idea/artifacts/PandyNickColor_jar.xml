@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="PandyNickColor:jar">
-    <output-path>$USER_HOME$/Desktop/PandyLand 3/plugins</output-path>
-    <root id="archive" name="PandyNickColor.jar">
-      <element id="module-output" name="PandyNickColor" />
-    </root>
-  </artifact>
-</component>
