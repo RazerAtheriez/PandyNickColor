@@ -1,13 +1,11 @@
 package me.pandy;
 
 import me.pandy.api.PandyNickColorAPI;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Objects;
 
 public class PandyNickColor extends JavaPlugin {
@@ -35,11 +33,8 @@ public class PandyNickColor extends JavaPlugin {
         Objects.requireNonNull(getCommand("tabcolor")).setTabCompleter(commandHandler);
         Objects.requireNonNull(getCommand("pandynickcolor")).setExecutor(commandHandler);
 
-        userDataManager.loadUserData();
-    }
-
-    public PandyNickColorAPI getAPI() {
-        return api;
+        userDataManager.loadUserData(); // Убедимся, что данные загружаются
+        getLogger().info("PandyNickColor успешно загружен!");
     }
 
     private void setupMessages() {
@@ -56,24 +51,11 @@ public class PandyNickColor extends JavaPlugin {
         userDataManager.loadUserData();
     }
 
-    @Override
-    public FileConfiguration getConfig() {
-        return super.getConfig();
-    }
-
     public FileConfiguration getMessages() {
         return messages;
     }
 
-    @Override
-    public void saveDefaultConfig() {
-        if (!new File(getDataFolder(), "config.yml").exists()) {
-            FileConfiguration config = getConfig();
-            config.createSection("colors");
-            config.getConfigurationSection("colors").set("scalk.startColor", "<#33E6F1>");
-            config.getConfigurationSection("colors").set("scalk.endColor", "</#FFFFFF>");
-            config.getConfigurationSection("colors").set("scalk.description", "Скалковый");
-            saveConfig();
-        }
+    public PandyNickColorAPI getAPI() {
+        return api;
     }
 }

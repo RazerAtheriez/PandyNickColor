@@ -21,7 +21,10 @@ public class PandyNickColorAPI {
     }
 
     public void setNickColor(Player player, String colorKey) {
-        if (player == null || colorKey == null) return;
+        if (player == null || colorKey == null) {
+            plugin.getLogger().warning("player or colorKey is null in setNickColor");
+            return;
+        }
         ConfigurationSection colors = plugin.getConfig().getConfigurationSection("colors");
         if (colors != null && colors.contains(colorKey)) {
             List<String> playerColors = userDataManager.getPlayerColors(player.getName());
@@ -31,39 +34,61 @@ public class PandyNickColorAPI {
                 userDataManager.saveUserData();
             }
             tabManager.applyNickColor(player, colorKey, plugin);
+        } else {
+            plugin.getLogger().warning("Цвет " + colorKey + " не найден в config.yml");
         }
     }
 
     public void resetNickColor(Player player) {
-        if (player == null) return;
+        if (player == null) {
+            plugin.getLogger().warning("player is null in resetNickColor");
+            return;
+        }
         tabManager.resetNickColor(player);
     }
 
     public boolean hasNickColor(Player player, String colorKey) {
-        if (player == null || colorKey == null) return false;
+        if (player == null || colorKey == null) {
+            plugin.getLogger().warning("player or colorKey is null in hasNickColor");
+            return false;
+        }
         List<String> playerColors = userDataManager.getPlayerColors(player.getName());
         return playerColors.contains(colorKey);
     }
 
     public List<String> getAvailableColors(Player player) {
-        if (player == null) return new ArrayList<>();
-        return userDataManager.getPlayerColors(player.getName());
+        if (player == null) {
+            plugin.getLogger().warning("player is null in getAvailableColors");
+            return new ArrayList<>();
+        }
+        List<String> colors = userDataManager.getPlayerColors(player.getName());
+        plugin.getLogger().info("API: Возвращены цвета для игрока " + player.getName() + ": " + colors);
+        return colors;
     }
 
     public List<String> getAllColors() {
         ConfigurationSection colors = plugin.getConfig().getConfigurationSection("colors");
-        if (colors == null) return new ArrayList<>();
+        if (colors == null) {
+            plugin.getLogger().warning("colors section is null in config.yml");
+            return new ArrayList<>();
+        }
         return new ArrayList<>(colors.getKeys(false));
     }
 
     public String getColorDescription(String colorKey) {
-        if (colorKey == null) return null;
+        if (colorKey == null) {
+            plugin.getLogger().warning("colorKey is null in getColorDescription");
+            return null;
+        }
         ConfigurationSection colorSection = plugin.getConfig().getConfigurationSection("colors." + colorKey);
         return colorSection != null ? colorSection.getString("description") : null;
     }
 
     public void removeNickColor(Player player, String colorKey) {
-        if (player == null || colorKey == null) return;
+        if (player == null || colorKey == null) {
+            plugin.getLogger().warning("player or colorKey is null in removeNickColor");
+            return;
+        }
         List<String> playerColors = userDataManager.getPlayerColors(player.getName());
         if (playerColors.remove(colorKey)) {
             userDataManager.setPlayerColors(player.getName(), playerColors);

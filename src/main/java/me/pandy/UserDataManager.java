@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 public class UserDataManager {
-
     private final PandyNickColor plugin;
     private File userFile;
     private FileConfiguration userData;
@@ -29,16 +28,21 @@ public class UserDataManager {
             try {
                 userFile.createNewFile();
             } catch (IOException e) {
+                plugin.getLogger().severe("Не удалось создать users.db: " + e.getMessage());
                 e.printStackTrace();
             }
         }
         userData = YamlConfiguration.loadConfiguration(userFile);
+        loadUserData(); // Загружаем данные сразу после создания файла
     }
 
     public void loadUserData() {
         playerColors.clear();
         for (String key : userData.getKeys(false)) {
-            playerColors.put(key, userData.getStringList(key));
+            String normalizedKey = key.toLowerCase();
+            List<String> colors = userData.getStringList(key);
+            playerColors.put(normalizedKey, colors);
+            plugin.getLogger().info("Загружены цвета для игрока " + normalizedKey + ": " + colors);
         }
     }
 
@@ -49,19 +53,34 @@ public class UserDataManager {
         try {
             userData.save(userFile);
         } catch (IOException e) {
+            plugin.getLogger().severe("Ошибка сохранения users.db: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     public List<String> getPlayerColors(String playerName) {
-        return playerColors.getOrDefault(playerName, new ArrayList<>());
+        if (playerName == null) {
+            plugin.getLogger().warning("playerName is null in getPlayerColors");
+            return new ArrayList<>();
+        }
+        List<String> colors = playerColors.getOrDefault(playerName.toLowerCase(), new ArrayList<>());
+        plugin.getLogger().info("Запрошены цвета для игрока " + playerName.toLowerCase() + ": " + colors);
+        return colors;
     }
 
     public void setPlayerColors(String playerName, List<String> colors) {
-        playerColors.put(playerName, colors);
+        if (playerName == null) {
+            plugin.getLogger().warning("playerName is null in setPlayerColors");
+            return;
+        }
+        playerColors.put(playerName.toLowerCase(), colors);
     }
 
     public void removePlayerColors(String playerName) {
-        playerColors.remove(playerName);
+        if (playerName == null) {
+            plugin.getLogger().warning("playerName is null in removePlayerColors");
+            return;
+        }
+        playerColors.remove(playerName.toLowerCase());
     }
 }
