@@ -61,9 +61,7 @@ public class PandyNickColorAPI {
             plugin.getLogger().warning("player is null in getAvailableColors");
             return new ArrayList<>();
         }
-        List<String> colors = userDataManager.getPlayerColors(player.getName());
-        plugin.getLogger().info("API: Возвращены цвета для игрока " + player.getName() + ": " + colors);
-        return colors;
+        return userDataManager.getPlayerColors(player.getName());
     }
 
     public List<String> getAllColors() {

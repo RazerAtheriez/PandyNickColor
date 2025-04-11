@@ -33,7 +33,7 @@ public class PandyNickColor extends JavaPlugin {
         Objects.requireNonNull(getCommand("tabcolor")).setTabCompleter(commandHandler);
         Objects.requireNonNull(getCommand("pandynickcolor")).setExecutor(commandHandler);
 
-        userDataManager.loadUserData(); // Убедимся, что данные загружаются
+        userDataManager.loadUserData();
         getLogger().info("PandyNickColor успешно загружен!");
     }
 

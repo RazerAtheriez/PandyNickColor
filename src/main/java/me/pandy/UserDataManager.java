@@ -33,7 +33,7 @@ public class UserDataManager {
             }
         }
         userData = YamlConfiguration.loadConfiguration(userFile);
-        loadUserData(); // Загружаем данные сразу после создания файла
+        loadUserData();
     }
 
     public void loadUserData() {
@@ -42,7 +42,6 @@ public class UserDataManager {
             String normalizedKey = key.toLowerCase();
             List<String> colors = userData.getStringList(key);
             playerColors.put(normalizedKey, colors);
-            plugin.getLogger().info("Загружены цвета для игрока " + normalizedKey + ": " + colors);
         }
     }
 
@@ -63,9 +62,7 @@ public class UserDataManager {
             plugin.getLogger().warning("playerName is null in getPlayerColors");
             return new ArrayList<>();
         }
-        List<String> colors = playerColors.getOrDefault(playerName.toLowerCase(), new ArrayList<>());
-        plugin.getLogger().info("Запрошены цвета для игрока " + playerName.toLowerCase() + ": " + colors);
-        return colors;
+        return playerColors.getOrDefault(playerName.toLowerCase(), new ArrayList<>());
     }
 
     public void setPlayerColors(String playerName, List<String> colors) {
