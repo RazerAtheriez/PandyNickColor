@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.util.Objects;
 
 public class PandyNickColor extends JavaPlugin {
-
     private FileConfiguration messages;
     private File messagesFile;
     private UserDataManager userDataManager;
@@ -26,7 +25,7 @@ public class PandyNickColor extends JavaPlugin {
         userDataManager = new UserDataManager(this);
         tabManager = new TabManager();
         commandHandler = new CommandHandler(this, userDataManager, tabManager);
-        api = new PandyNickColorAPI(this);
+        api = new PandyNickColorAPI(this, userDataManager, tabManager);
 
         getServer().getPluginManager().registerEvents(commandHandler, this);
 
@@ -37,6 +36,10 @@ public class PandyNickColor extends JavaPlugin {
         Objects.requireNonNull(getCommand("pandynickcolor")).setExecutor(commandHandler);
 
         userDataManager.loadUserData();
+    }
+
+    public PandyNickColorAPI getAPI() {
+        return api;
     }
 
     private void setupMessages() {
@@ -60,10 +63,6 @@ public class PandyNickColor extends JavaPlugin {
 
     public FileConfiguration getMessages() {
         return messages;
-    }
-
-    public PandyNickColorAPI getAPI() {
-        return api;
     }
 
     @Override

@@ -10,15 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PandyNickColorAPI {
-
     private final PandyNickColor plugin;
     private final UserDataManager userDataManager;
     private final TabManager tabManager;
 
-    public PandyNickColorAPI(PandyNickColor plugin) {
+    public PandyNickColorAPI(PandyNickColor plugin, UserDataManager userDataManager, TabManager tabManager) {
         this.plugin = plugin;
-        this.userDataManager = new UserDataManager(plugin);
-        this.tabManager = new TabManager();
+        this.userDataManager = userDataManager;
+        this.tabManager = tabManager;
     }
 
     public void setNickColor(Player player, String colorKey) {
