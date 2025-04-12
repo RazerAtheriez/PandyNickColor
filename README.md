@@ -28,7 +28,7 @@ PandyNickColor — это плагин для Minecraft-серверов на Pa
     <dependency>
         <groupId>com.github.RazerAtheriez</groupId>
         <artifactId>PandyNickColor</artifactId>
-        <version>v1.0</version>
+        <version>v1.3</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>
