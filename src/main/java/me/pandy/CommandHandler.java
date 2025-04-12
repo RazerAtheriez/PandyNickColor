@@ -1,8 +1,12 @@
 package me.pandy;
 
+import me.pandy.api.PandyNickColorAPI;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.command.*;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -10,174 +14,167 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class CommandHandler implements CommandExecutor, TabCompleter, Listener {
-
     private final PandyNickColor plugin;
     private final UserDataManager userDataManager;
     private final TabManager tabManager;
+    private final PandyNickColorAPI api;
 
     public CommandHandler(PandyNickColor plugin, UserDataManager userDataManager, TabManager tabManager) {
         this.plugin = plugin;
         this.userDataManager = userDataManager;
         this.tabManager = tabManager;
+        this.api = new PandyNickColorAPI(plugin, userDataManager, tabManager);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("nickcolor")) {
-            if (!(sender instanceof ConsoleCommandSender) && !sender.hasPermission("nickcolor.color")) {
-                sender.sendMessage(getMessage("no-permission"));
+        if (command.getName().equalsIgnoreCase("pandynickcolor")) {
+            if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
+                sender.sendMessage("§6[PandyNickColor] §eКоманды:");
+                sender.sendMessage("§e/pandynickcolor reload §7- Перезагрузить конфигурацию");
                 return true;
             }
 
-            if (args.length != 2) {
-                sender.sendMessage(getMessage("nickcolor-usage"));
-                return true;
-            }
-
-            String action = args[0];
-            String targetName = args[1];
-            Player target = Bukkit.getPlayer(targetName);
-
-            if (action.equalsIgnoreCase("clear")) {
-                userDataManager.removePlayerColors(targetName);
-                userDataManager.saveUserData();
-                if (target != null) {
-                    tabManager.resetNickColor(target);
+            if (args[0].equalsIgnoreCase("reload")) {
+                if (!sender.hasPermission("pandynickcolor.reload")) {
+                    sender.sendMessage(plugin.getMessages().getString("no-permission"));
+                    return true;
                 }
-                sender.sendMessage(getMessage("color-cleared").replace("%player%", targetName));
+                plugin.reloadConfigs();
+                sender.sendMessage("§6[PandyNickColor] §eКонфигурация перезагружена!");
+                return true;
+            }
+        }
+
+        if (command.getName().equalsIgnoreCase("nickcolor")) {
+            if (args.length < 2) {
+                sender.sendMessage("§6[PandyNickColor] §eИспользование: /nickcolor <цвет> <игрок> или /nickcolor clear <игрок>");
+                return true;
+            }
+
+            String colorKey = args[0];
+            String targetPlayerName = args[1];
+
+            OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetPlayerName);
+            if (targetPlayer == null || !targetPlayer.hasPlayedBefore()) {
+                sender.sendMessage("§cИгрок " + targetPlayerName + " не найден!");
+                return true;
+            }
+
+            if (colorKey.equalsIgnoreCase("clear")) {
+                api.resetNickColor(targetPlayer);
+                userDataManager.setPlayerColors(targetPlayer.getName(), new ArrayList<>());
+                userDataManager.saveUserData();
+                sender.sendMessage("§6[PandyNickColor] §eЦвет ника игрока " + targetPlayer.getName() + " очищен!");
                 return true;
             }
 
             ConfigurationSection colors = plugin.getConfig().getConfigurationSection("colors");
-            if (colors == null || !colors.contains(action)) {
-                sender.sendMessage(getMessage("color-not-found"));
+            if (colors == null || !colors.contains(colorKey)) {
+                sender.sendMessage("§cЦвет " + colorKey + " не найден в конфигурации!");
                 return true;
             }
 
-            List<String> playerPermittedColors = userDataManager.getPlayerColors(targetName);
-            if (!playerPermittedColors.contains(action)) {
-                playerPermittedColors.add(action);
-                userDataManager.setPlayerColors(targetName, playerPermittedColors);
-                userDataManager.saveUserData();
+            if (!sender.hasPermission("pandynickcolor.color." + colorKey)) {
+                sender.sendMessage(plugin.getMessages().getString("no-permission"));
+                return true;
             }
 
-            sender.sendMessage(getMessage("color-assigned").replace("%color%", action).replace("%player%", targetName));
-            if (target != null) {
-                tabManager.applyNickColor(target, action, plugin);
-            }
+            api.setNickColor(targetPlayer, colorKey);
+            sender.sendMessage("§6[PandyNickColor] §eЦвет ника игрока " + targetPlayer.getName() + " установлен на " + colorKey + "!");
             return true;
         }
 
         if (command.getName().equalsIgnoreCase("tabcolor")) {
             if (!(sender instanceof Player)) {
-                sender.sendMessage(getMessage("players-only"));
+                sender.sendMessage("§cЭта команда только для игроков!");
                 return true;
             }
 
             Player player = (Player) sender;
-            if (args.length != 1) {
-                sender.sendMessage(getMessage("tabcolor-usage"));
-                return true;
-            }
-
-            String colorDesc = args[0];
-
-            if (colorDesc.equalsIgnoreCase("clear")) {
-                tabManager.resetNickColor(player);
-                player.sendMessage(getMessage("color-reset"));
-                return true;
-            }
-
-            List<String> permittedColors = userDataManager.getPlayerColors(player.getName());
-            String colorKey = null;
-            ConfigurationSection colors = plugin.getConfig().getConfigurationSection("colors");
-            for (String key : colors.getKeys(false)) {
-                if (colors.getString(key + ".description").equalsIgnoreCase(colorDesc)) {
-                    colorKey = key;
-                    break;
+            if (args.length == 0) {
+                List<String> availableColors = api.getAvailableColors(player);
+                if (availableColors.isEmpty()) {
+                    player.sendMessage("§cУ вас нет доступных цветов!");
+                    return true;
                 }
-            }
 
-            if (colorKey == null || !permittedColors.contains(colorKey)) {
-                player.sendMessage(getMessage("no-access-to-color"));
+                player.sendMessage("§6[PandyNickColor] §eВаши доступные цвета:");
+                for (String color : availableColors) {
+                    String description = api.getColorDescription(color);
+                    player.sendMessage("§e- " + color + (description != null ? " (" + description + ")" : ""));
+                }
                 return true;
             }
 
-            tabManager.applyNickColor(player, colorKey, plugin);
-            player.sendMessage(getMessage("color-changed").replace("%color%", colorDesc));
+            String colorKey = args[0];
+            if (colorKey.equalsIgnoreCase("reset")) {
+                api.resetNickColor(player);
+                player.sendMessage("§6[PandyNickColor] §eЦвет вашего ника очищен!");
+                return true;
+            }
+
+            if (!api.hasNickColor(player, colorKey)) {
+                player.sendMessage("§cУ вас нет доступа к цвету " + colorKey + "!");
+                return true;
+            }
+
+            api.setNickColor(player, colorKey);
+            player.sendMessage("§6[PandyNickColor] §eВаш цвет ника изменён на " + colorKey + "!");
             return true;
         }
+
+        return false;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        List<String> completions = new ArrayList<>();
 
         if (command.getName().equalsIgnoreCase("pandynickcolor")) {
-            if (!sender.hasPermission("nickcolor.reload")) {
-                sender.sendMessage(getMessage("no-permission"));
-                return true;
+            if (args.length == 1) {
+                completions.add("reload");
+                completions.add("help");
             }
-
-            if (args.length != 1 || !args[0].equalsIgnoreCase("reload")) {
-                sender.sendMessage(getMessage("reload-usage"));
-                return true;
-            }
-
-            plugin.reloadConfigs();
-            sender.sendMessage(getMessage("reload-success"));
-            return true;
         }
-        return false;
+
+        if (command.getName().equalsIgnoreCase("nickcolor")) {
+            if (args.length == 1) {
+                ConfigurationSection colors = plugin.getConfig().getConfigurationSection("colors");
+                if (colors != null) {
+                    completions.addAll(colors.getKeys(false));
+                }
+                completions.add("clear");
+            } else if (args.length == 2) {
+                for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+                    if (offlinePlayer.getName() != null) {
+                        completions.add(offlinePlayer.getName());
+                    }
+                }
+            }
+        }
+
+        if (command.getName().equalsIgnoreCase("tabcolor")) {
+            if (args.length == 1) {
+                if (sender instanceof Player) {
+                    completions.addAll(api.getAvailableColors((Player) sender));
+                    completions.add("reset");
+                }
+            }
+        }
+
+        return completions;
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        List<String> permittedColors = userDataManager.getPlayerColors(player.getName());
-        if (permittedColors != null && !permittedColors.isEmpty()) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> tabManager.applyNickColor(player, permittedColors.get(0), plugin), 2L);
+        List<String> colors = userDataManager.getPlayerColors(player.getName());
+        if (!colors.isEmpty()) {
+            tabManager.applyNickColor(player, colors.get(0), plugin);
         }
-    }
-
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (command.getName().equalsIgnoreCase("nickcolor")) {
-            if (args.length == 1) {
-                List<String> completions = new ArrayList<>(plugin.getConfig().getConfigurationSection("colors").getKeys(false));
-                completions.add("clear");
-                return completions;
-            }
-            if (args.length == 2) {
-                return Bukkit.getOnlinePlayers().stream()
-                        .map(Player::getName)
-                        .collect(Collectors.toList());
-            }
-        }
-
-        if (command.getName().equalsIgnoreCase("tabcolor") && sender instanceof Player) {
-            if (args.length == 1) {
-                List<String> permittedColors = userDataManager.getPlayerColors(sender.getName());
-                List<String> completions = new ArrayList<>();
-                ConfigurationSection colors = plugin.getConfig().getConfigurationSection("colors");
-                for (String key : permittedColors) {
-                    completions.add(colors.getString(key + ".description"));
-                }
-                completions.add("clear");
-                return completions;
-            }
-        }
-
-        if (command.getName().equalsIgnoreCase("pandynickcolor")) {
-            if (args.length == 1) {
-                return Collections.singletonList("reload");
-            }
-        }
-        return new ArrayList<>();
-    }
-
-    private String getMessage(String key) {
-        String message = plugin.getMessages().getString(key, "&cMessage not found: " + key);
-        return ChatColor.translateAlternateColorCodes('&', message);
     }
 }

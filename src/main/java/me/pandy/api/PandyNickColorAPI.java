@@ -3,6 +3,7 @@ package me.pandy.api;
 import me.pandy.PandyNickColor;
 import me.pandy.TabManager;
 import me.pandy.UserDataManager;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
@@ -20,48 +21,53 @@ public class PandyNickColorAPI {
         this.tabManager = tabManager;
     }
 
-    public void setNickColor(Player player, String colorKey) {
-        if (player == null || colorKey == null) {
-            plugin.getLogger().warning("player or colorKey is null in setNickColor");
+    public void setNickColor(OfflinePlayer offlinePlayer, String colorKey) {
+        if (offlinePlayer == null || colorKey == null) {
+            plugin.getLogger().warning("offlinePlayer or colorKey is null in setNickColor");
             return;
         }
         ConfigurationSection colors = plugin.getConfig().getConfigurationSection("colors");
         if (colors != null && colors.contains(colorKey)) {
-            List<String> playerColors = userDataManager.getPlayerColors(player.getName());
+            List<String> playerColors = userDataManager.getPlayerColors(offlinePlayer.getName());
             if (!playerColors.contains(colorKey)) {
                 playerColors.add(colorKey);
-                userDataManager.setPlayerColors(player.getName(), playerColors);
+                userDataManager.setPlayerColors(offlinePlayer.getName(), playerColors);
                 userDataManager.saveUserData();
             }
-            tabManager.applyNickColor(player, colorKey, plugin);
+            Player player = offlinePlayer.getPlayer();
+            if (player != null) {
+                tabManager.applyNickColor(player, colorKey, plugin);
+            }
         } else {
             plugin.getLogger().warning("Цвет " + colorKey + " не найден в config.yml");
         }
     }
 
-    public void resetNickColor(Player player) {
-        if (player == null) {
-            plugin.getLogger().warning("player is null in resetNickColor");
+    public void resetNickColor(OfflinePlayer offlinePlayer) {
+        if (offlinePlayer == null) {
+            plugin.getLogger().warning("offlinePlayer is null in resetNickColor");
             return;
         }
-        tabManager.resetNickColor(player);
+        Player player = offlinePlayer.getPlayer();
+        if (player != null) {
+            tabManager.resetNickColor(player);
+        }
     }
 
-    public boolean hasNickColor(Player player, String colorKey) {
-        if (player == null || colorKey == null) {
-            plugin.getLogger().warning("player or colorKey is null in hasNickColor");
+    public boolean hasNickColor(OfflinePlayer offlinePlayer, String colorKey) {
+        if (offlinePlayer == null || colorKey == null) {
+            plugin.getLogger().warning("offlinePlayer or colorKey is null in hasNickColor");
             return false;
         }
-        List<String> playerColors = userDataManager.getPlayerColors(player.getName());
+        List<String> playerColors = userDataManager.getPlayerColors(offlinePlayer.getName());
         return playerColors.contains(colorKey);
     }
 
-    public List<String> getAvailableColors(Player player) {
-        if (player == null) {
-            plugin.getLogger().warning("player is null in getAvailableColors");
+    public List<String> getAvailableColors(OfflinePlayer offlinePlayer) {
+        if (offlinePlayer == null) {
             return new ArrayList<>();
         }
-        return userDataManager.getPlayerColors(player.getName());
+        return userDataManager.getPlayerColors(offlinePlayer.getName());
     }
 
     public List<String> getAllColors() {
@@ -82,19 +88,22 @@ public class PandyNickColorAPI {
         return colorSection != null ? colorSection.getString("description") : null;
     }
 
-    public void removeNickColor(Player player, String colorKey) {
-        if (player == null || colorKey == null) {
-            plugin.getLogger().warning("player or colorKey is null in removeNickColor");
+    public void removeNickColor(OfflinePlayer offlinePlayer, String colorKey) {
+        if (offlinePlayer == null || colorKey == null) {
+            plugin.getLogger().warning("offlinePlayer or colorKey is null in removeNickColor");
             return;
         }
-        List<String> playerColors = userDataManager.getPlayerColors(player.getName());
+        List<String> playerColors = userDataManager.getPlayerColors(offlinePlayer.getName());
         if (playerColors.remove(colorKey)) {
-            userDataManager.setPlayerColors(player.getName(), playerColors);
+            userDataManager.setPlayerColors(offlinePlayer.getName(), playerColors);
             userDataManager.saveUserData();
-            if (playerColors.isEmpty()) {
-                tabManager.resetNickColor(player);
-            } else {
-                tabManager.applyNickColor(player, playerColors.get(0), plugin);
+            Player player = offlinePlayer.getPlayer();
+            if (player != null) {
+                if (playerColors.isEmpty()) {
+                    tabManager.resetNickColor(player);
+                } else {
+                    tabManager.applyNickColor(player, playerColors.get(0), plugin);
+                }
             }
         }
     }
