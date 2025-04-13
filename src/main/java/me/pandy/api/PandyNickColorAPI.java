@@ -21,10 +21,6 @@ public class PandyNickColorAPI {
         this.tabManager = tabManager;
     }
 
-    public UserDataManager getUserDataManager() {
-        return userDataManager;
-    }
-
     public void setNickColor(OfflinePlayer offlinePlayer, String colorKey) {
         if (offlinePlayer == null || colorKey == null) {
             plugin.getLogger().warning("offlinePlayer or colorKey is null in setNickColor");
@@ -69,7 +65,6 @@ public class PandyNickColorAPI {
 
     public List<String> getAvailableColors(OfflinePlayer offlinePlayer) {
         if (offlinePlayer == null) {
-            plugin.getLogger().warning("offlinePlayer is null in getAvailableColors");
             return new ArrayList<>();
         }
         return userDataManager.getPlayerColors(offlinePlayer.getName());
