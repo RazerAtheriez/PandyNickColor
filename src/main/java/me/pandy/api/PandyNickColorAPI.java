@@ -69,6 +69,7 @@ public class PandyNickColorAPI {
 
     public List<String> getAvailableColors(OfflinePlayer offlinePlayer) {
         if (offlinePlayer == null) {
+            plugin.getLogger().warning("offlinePlayer is null in getAvailableColors");
             return new ArrayList<>();
         }
         return userDataManager.getPlayerColors(offlinePlayer.getName());
